@@ -199,22 +199,8 @@
 
     <p class="hint">Tap an event to fill out your RSVP.</p>
 
-    <!-- Netlify RSVP form -->
-    <form
-      id="rsvp-form"
-      name="rsvp"
-      method="POST"
-      data-netlify="true"
-      netlify-honeypot="bot-field"
-    >
-      <!-- Netlify required hidden field -->
-      <input type="hidden" name="form-name" value="rsvp" />
-
-      <!-- Honeypot (spam protection) -->
-      <p class="visually-hidden">
-        <label>Don’t fill this out: <input name="bot-field" /></label>
-      </p>
-
+    <!-- Updated RSVP form -->
+    <form id="rsvp-form" name="rsvp">
       <div class="event-label" id="event-label"></div>
       <input type="hidden" name="event" id="event-input" />
 
@@ -267,15 +253,6 @@
       });
     });
 
-    // Helper to encode data for Netlify AJAX submission
-    function encode(data) {
-      return Object.keys(data)
-        .map(
-          (key) => encodeURIComponent(key) + '=' + encodeURIComponent(data[key])
-        )
-        .join('&');
-    }
-
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       message.style.display = 'none';
@@ -287,25 +264,46 @@
         return;
       }
 
-      const formData = new FormData(form);
-      const data = {};
-      formData.forEach((value, key) => {
-        data[key] = value;
-      });
+      const name = form.name.value.trim();
+      const guests = form.guests.value.trim();
 
-      fetch('/', {
+      if (!name || !guests) {
+        errorMessage.textContent = 'Please fill in all fields.';
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      const payload = {
+        event: selectedEvent,
+        name: name,
+        guests: guests
+      };
+
+      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_ZcayMkA9CWEN5t7UmpEJS9ktHZz6VV4N9UfDgnQD3ON-mb-7E7Y0J2tANx7HirrnfQ/exec';
+
+      fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode(data)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       })
-        .then(() => {
-          message.style.display = 'block';
-          form.reset();
-          eventButtons.forEach((b) => b.classList.remove('active'));
-          selectedEvent = '';
-          eventLabel.textContent = '';
+        .then((res) => {
+          if (!res.ok) throw new Error('Network response was not ok');
+          return res.json();
         })
-        .catch(() => {
+        .then((data) => {
+          if (data.status === 'success') {
+            message.textContent = 'Thank you! Your RSVP has been sent.';
+            message.style.display = 'block';
+            form.reset();
+            eventButtons.forEach((b) => b.classList.remove('active'));
+            selectedEvent = '';
+            eventLabel.textContent = '';
+          } else {
+            throw new Error(data.message || 'Unknown error');
+          }
+        })
+        .catch((err) => {
+          console.error(err);
           errorMessage.textContent = 'Something went wrong. Please try again.';
           errorMessage.style.display = 'block';
         });
