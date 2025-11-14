@@ -81,7 +81,7 @@
       margin-top: 10px;
       border-top: 1px solid #eee;
       padding-top: 16px;
-      display: none;
+      display: block;
     }
 
     .event-label {
@@ -199,10 +199,30 @@
 
     <p class="hint">Tap an event to fill out your RSVP.</p>
 
-    <!-- Updated RSVP form -->
-    <form id="rsvp-form" name="rsvp">
+    <form
+      id="rsvp-form"
+      name="rsvp"
+      method="POST"
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+    >
+      <input type="hidden" name="form-name" value="rsvp" />
+      <p class="visually-hidden">
+        <label>Don’t fill this out: <input name="bot-field" /></label>
+      </p>
+
       <div class="event-label" id="event-label"></div>
-      <input type="hidden" name="event" id="event-input" />
+
+      <div class="field">
+        <label for="event">Type of Event</label>
+        <input
+          id="event"
+          name="event"
+          readonly
+          placeholder="Please select an event above"
+          required
+        />
+      </div>
 
       <div class="field">
         <label for="name">Name</label>
@@ -210,109 +230,35 @@
       </div>
 
       <div class="field">
-        <label for="guests">How many people are attending?</label>
+        <label for="guests">Number of people</label>
         <input
           id="guests"
           name="guests"
           type="number"
           min="1"
           step="1"
-          placeholder="Number of guests"
           required
         />
       </div>
 
       <button type="submit" class="submit-btn">Submit RSVP</button>
-
-      <div class="message" id="message">Thank you! Your RSVP has been sent.</div>
-      <div class="error" id="error-message">Something went wrong. Please try again.</div>
     </form>
   </div>
 
   <script>
     const eventButtons = document.querySelectorAll('.event-btn');
-    const form = document.getElementById('rsvp-form');
     const eventLabel = document.getElementById('event-label');
-    const eventInput = document.getElementById('event-input');
-    const message = document.getElementById('message');
-    const errorMessage = document.getElementById('error-message');
-
-    let selectedEvent = '';
+    const eventInput = document.getElementById('event');
 
     eventButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         eventButtons.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
 
-        selectedEvent = btn.dataset.event;
+        const selectedEvent = btn.dataset.event;
         eventLabel.textContent = `RSVP for: ${selectedEvent}`;
         eventInput.value = selectedEvent;
-        form.style.display = 'block';
-        message.style.display = 'none';
-        errorMessage.style.display = 'none';
       });
-    });
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      message.style.display = 'none';
-      errorMessage.style.display = 'none';
-
-      if (!selectedEvent) {
-        errorMessage.textContent = 'Please choose an event first.';
-        errorMessage.style.display = 'block';
-        return;
-      }
-
-      const name = form.name.value.trim();
-      const guests = form.guests.value.trim();
-
-      if (!name || !guests) {
-        errorMessage.textContent = 'Please fill in all fields.';
-        errorMessage.style.display = 'block';
-        return;
-      }
-
-      const payload = {
-        event: selectedEvent,
-        name: name,
-        guests: guests
-      };
-
-      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_ZcayMkA9CWEN5t7UmpEJS9ktHZz6VV4N9UfDgnQD3ON-mb-7E7Y0J2tANx7HirrnfQ/exec';
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      .then((res) => res.text())
-      .then((text) => {
-        console.log('Script response:', text);
-
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          throw new Error('Non-JSON response from script');
-        }
-
-        if (data.status === 'success') {
-          message.textContent = 'Thank you! Your RSVP has been sent.';
-          message.style.display = 'block';
-          form.reset();
-          eventButtons.forEach((b) => b.classList.remove('active'));
-          selectedEvent = '';
-          eventLabel.textContent = '';
-        } else {
-          throw new Error(data.message || 'Unknown error');
-        }
-      })
-        .catch((err) => {
-          console.error(err);
-          errorMessage.textContent = 'Something went wrong. Please try again.';
-          errorMessage.style.display = 'block';
-        });
     });
   </script>
 </body>
