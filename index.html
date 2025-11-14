@@ -286,22 +286,28 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-        .then((res) => {
-          if (!res.ok) throw new Error('Network response was not ok');
-          return res.json();
-        })
-        .then((data) => {
-          if (data.status === 'success') {
-            message.textContent = 'Thank you! Your RSVP has been sent.';
-            message.style.display = 'block';
-            form.reset();
-            eventButtons.forEach((b) => b.classList.remove('active'));
-            selectedEvent = '';
-            eventLabel.textContent = '';
-          } else {
-            throw new Error(data.message || 'Unknown error');
-          }
-        })
+      .then((res) => res.text())
+      .then((text) => {
+        console.log('Script response:', text);
+
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error('Non-JSON response from script');
+        }
+
+        if (data.status === 'success') {
+          message.textContent = 'Thank you! Your RSVP has been sent.';
+          message.style.display = 'block';
+          form.reset();
+          eventButtons.forEach((b) => b.classList.remove('active'));
+          selectedEvent = '';
+          eventLabel.textContent = '';
+        } else {
+          throw new Error(data.message || 'Unknown error');
+        }
+      })
         .catch((err) => {
           console.error(err);
           errorMessage.textContent = 'Something went wrong. Please try again.';
