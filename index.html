@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Event RSVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: url("background.jpeg") center center / cover no-repeat fixed;
+      padding: 16px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      padding: 24px 20px 20px;
+      max-width: 430px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
+      text-align: center;
+      margin-bottom: 18px;
+      color: #222;
+      line-height: 1.3;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .event-btn {
+      flex: 1 1 120px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.18s ease;
+      text-align: center;
+    }
+
+    .event-btn:hover {
+      background: #f0f0ff;
+      border-color: #b3b3ff;
+    }
+
+    .event-btn.active {
+      background: #4b5cff;
+      color: white;
+      border-color: #4b5cff;
+      box-shadow: 0 6px 12px rgba(75, 92, 255, 0.25);
+    }
+
+    .hint {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #777;
+      margin-bottom: 10px;
+    }
+
+    form {
+      margin-top: 10px;
+      border-top: 1px solid #eee;
+      padding-top: 16px;
+      display: none;
+    }
+
+    .event-label {
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      text-align: center;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: #444;
+    }
+
+    input {
+      width: 100%;
+      padding: 9px 11px;
+      border-radius: 9px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #4b5cff;
+      box-shadow: 0 0 0 2px rgba(75, 92, 255, 0.18);
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 6px;
+      padding: 11px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #222;
+      color: #fff;
+      font-size: 0.96rem;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.08s ease;
+    }
+
+    .submit-btn:hover {
+      background: #000;
+      transform: translateY(-1px);
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 0.86rem;
+      text-align: center;
+      color: #2f8f4f;
+      display: none;
+    }
+
+    .error {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      text-align: center;
+      color: #c0392b;
+      display: none;
+    }
+
+    .visually-hidden {
+      border: 0;
+      clip: rect(0 0 0 0);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      width: 1px;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 12px;
+      }
+
+      .card {
+        padding: 20px 16px 16px;
+        border-radius: 14px;
+      }
+
+      .event-btn {
+        font-size: 0.9rem;
+        padding: 9px 12px;
+      }
+
+      input {
+        font-size: 0.9rem;
+      }
+
+      .submit-btn {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Which event would you like to attend?</h1>
+
+    <div class="buttons">
+      <button type="button" class="event-btn" data-event="Wedding">Wedding</button>
+      <button type="button" class="event-btn" data-event="Reception">Reception</button>
+      <button type="button" class="event-btn" data-event="Jago">Jago</button>
+    </div>
+
+    <p class="hint">Tap an event to fill out your RSVP.</p>
+
+    <!-- Netlify RSVP form -->
+    <form
+      id="rsvp-form"
+      name="rsvp"
+      method="POST"
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+    >
+      <!-- Netlify required hidden field -->
+      <input type="hidden" name="form-name" value="rsvp" />
+
+      <!-- Honeypot (spam protection) -->
+      <p class="visually-hidden">
+        <label>Don’t fill this out: <input name="bot-field" /></label>
+      </p>
+
+      <div class="event-label" id="event-label"></div>
+      <input type="hidden" name="event" id="event-input" />
+
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" name="name" autocomplete="name" required />
+      </div>
+
+      <div class="field">
+        <label for="guests">How many people are attending?</label>
+        <input
+          id="guests"
+          name="guests"
+          type="number"
+          min="1"
+          step="1"
+          placeholder="Number of guests"
+          required
+        />
+      </div>
+
+      <button type="submit" class="submit-btn">Submit RSVP</button>
+
+      <div class="message" id="message">Thank you! Your RSVP has been sent.</div>
+      <div class="error" id="error-message">Something went wrong. Please try again.</div>
+    </form>
+  </div>
+
+  <script>
+    const eventButtons = document.querySelectorAll('.event-btn');
+    const form = document.getElementById('rsvp-form');
+    const eventLabel = document.getElementById('event-label');
+    const eventInput = document.getElementById('event-input');
+    const message = document.getElementById('message');
+    const errorMessage = document.getElementById('error-message');
+
+    let selectedEvent = '';
+
+    eventButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        eventButtons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        selectedEvent = btn.dataset.event;
+        eventLabel.textContent = `RSVP for: ${selectedEvent}`;
+        eventInput.value = selectedEvent;
+        form.style.display = 'block';
+        message.style.display = 'none';
+        errorMessage.style.display = 'none';
+      });
+    });
+
+    // Helper to encode data for Netlify AJAX submission
+    function encode(data) {
+      return Object.keys(data)
+        .map(
+          (key) => encodeURIComponent(key) + '=' + encodeURIComponent(data[key])
+        )
+        .join('&');
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      message.style.display = 'none';
+      errorMessage.style.display = 'none';
+
+      if (!selectedEvent) {
+        errorMessage.textContent = 'Please choose an event first.';
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      const formData = new FormData(form);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: encode(data)
+      })
+        .then(() => {
+          message.style.display = 'block';
+          form.reset();
+          eventButtons.forEach((b) => b.classList.remove('active'));
+          selectedEvent = '';
+          eventLabel.textContent = '';
+        })
+        .catch(() => {
+          errorMessage.textContent = 'Something went wrong. Please try again.';
+          errorMessage.style.display = 'block';
+        });
+    });
+  </script>
+</body>
+</html>
